@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+<<<<<<< HEAD
 
+=======
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -67,7 +70,11 @@
             padding: 2.5rem;
             width: 100%;
             max-width: 400px;
+<<<<<<< HEAD
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+=======
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
         }
 
         h1 {
@@ -154,7 +161,10 @@
         }
     </style>
 </head>
+<<<<<<< HEAD
 
+=======
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
 <body>
     <div class="background-shapes">
         <div class="shape shape-1"></div>
@@ -172,7 +182,11 @@
                 <label for="username">Username / User ID</label>
                 <input type="text" id="username" required placeholder="Enter username">
             </div>
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
             <div class="input-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" required placeholder="••••••••">
@@ -195,8 +209,13 @@
             const subtitle = document.getElementById('formSubtitle');
             const btn = document.getElementById('submitBtn');
             const toggle = document.getElementById('toggleText');
+<<<<<<< HEAD
 
             if (isSignup) {
+=======
+            
+            if(isSignup) {
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
                 title.textContent = 'Create Patient Account';
                 subtitle.textContent = 'Sign up to book your appointments';
                 btn.textContent = 'Sign Up';
@@ -218,11 +237,16 @@
 
             errorMsg.textContent = 'Processing...';
 
+<<<<<<< HEAD
             if (isSignup) {
+=======
+            if(isSignup) {
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
                 // Patient Signup
                 try {
                     const res = await fetch('http://localhost:8002/signup', {
                         method: 'POST',
+<<<<<<< HEAD
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: user, password: pass })
                     });
@@ -249,6 +273,21 @@
                     }
                 } catch (err) {
                     errorMsg.textContent = 'Server error/CORS error. Please try again.';
+=======
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({username: user, password: pass})
+                    });
+                    const data = await res.json();
+                    if(data.success) {
+                        alert('Signup successful! Please login.');
+                        toggleMode(); // switch back to login
+                        document.getElementById('password').value = '';
+                    } else {
+                        errorMsg.textContent = data.message;
+                    }
+                } catch(err) {
+                    errorMsg.textContent = 'Server error. Please try again.';
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
                 }
                 return;
             }
@@ -266,22 +305,38 @@
                 try {
                     const res = await fetch('http://localhost:8002/login', {
                         method: 'POST',
+<<<<<<< HEAD
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: user, password: pass })
                     });
                     const data = await res.json();
                     if (data.success) {
+=======
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({username: user, password: pass})
+                    });
+                    const data = await res.json();
+                    if(data.success) {
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
                         localStorage.setItem('patientUser', user);
                         window.location.href = "/patient/index.html";
                     } else {
                         errorMsg.textContent = "Invalid credentials";
                     }
+<<<<<<< HEAD
                 } catch (err) {
+=======
+                } catch(err) {
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
                     errorMsg.textContent = 'Server error. Please try again.';
                 }
             }
         });
     </script>
 </body>
+<<<<<<< HEAD
 
 </html>
+=======
+</html>
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf

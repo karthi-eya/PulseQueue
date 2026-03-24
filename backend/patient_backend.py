@@ -125,6 +125,7 @@ def patient_dashboard(token: str):
                     "priority": p["priority"]
                 }
 
+<<<<<<< HEAD
         return {
             "status": "booked_not_arrived",
             "message": "You are booked but not yet arrived",
@@ -133,12 +134,19 @@ def patient_dashboard(token: str):
 
     except:
         return {"error": "Dashboard failed"}
+=======
+    return {
+        "message": "You are booked but not yet arrived",
+        "token": token
+    }
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
 
 # -------------------------
 # Auth
 # -------------------------
 @app.post("/signup")
 def signup(data: dict):
+<<<<<<< HEAD
     try:
         response = requests.post(f"{CORE_BACKEND_URL}/signup", json=data)
         return response.json()
@@ -152,3 +160,12 @@ def login(data: dict):
         return response.json()
     except:
         return {"error": "Login failed"}
+=======
+    response = requests.post(f"{CORE_BACKEND_URL}/signup", json=data)
+    return response.json()
+
+@app.post("/login")
+def login(data: dict):
+    response = requests.post(f"{CORE_BACKEND_URL}/login", json=data)
+    return response.json()
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf

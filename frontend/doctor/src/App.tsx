@@ -35,7 +35,11 @@ export default function App() {
   const [completedCount, setCompletedCount] = useState(0);
 
   // Hardcode doctor for now, ideally this would be dynamic upon login
+<<<<<<< HEAD
   const doctorSpecialty = "doc";
+=======
+  const doctorSpecialty = "General Physician";
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -45,8 +49,13 @@ export default function App() {
         const res = await fetch(`http://localhost:8001/queue/${doctorSpecialty}`);
         const data = await res.json();
 
+<<<<<<< HEAD
         if (Array.isArray(data)) {
           const mappedPatients: Patient[] = data.map((p: any) => {
+=======
+        if (data && data.queue) {
+          const mappedPatients: Patient[] = data.queue.map((p: any) => {
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
             // Extract primary symptom string
             let primarySymptom = "Consultation / Follow-up";
             if (p.symptoms && typeof p.symptoms === 'object') {
@@ -136,7 +145,11 @@ export default function App() {
         const matchesArrivedFilter = showArrivedOnly ? p.status === 'arrived' : true;
         return matchesSearch && matchesArrivedFilter && p.status !== 'done';
       })
+<<<<<<< HEAD
       .sort((a, b) => a.queueNumber - b.queueNumber);
+=======
+      .sort((a, b) => (parseTime(a.appointmentTime) || 0) - (parseTime(b.appointmentTime) || 0));
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
   }, [searchTerm, patients, showArrivedOnly]);
 
   if (!isLoggedIn) {
