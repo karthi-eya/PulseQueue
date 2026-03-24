@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseQueue | Unified Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-color: #f8fafc;
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .background-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+
+        .shape-1 {
+            width: 400px;
+            height: 400px;
+            background: #93c5fd;
+            top: -100px;
+            left: -100px;
+        }
+
+        .shape-2 {
+            width: 500px;
+            height: 500px;
+            background: #bfdbfe;
+            bottom: -150px;
+            right: -100px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            font-family: inherit;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .toggle-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #errorMsg {
+            color: #ef4444;
+            text-align: center;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            min-height: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <div class="glass-card">
+        <h1 id="formTitle">Welcome Back</h1>
+        <p class="subtitle" id="formSubtitle">Login to your PulseQueue account</p>
+
+        <div id="errorMsg"></div>
+
+        <form id="authForm">
+            <div class="input-group">
+                <label for="username">Username / User ID</label>
+                <input type="text" id="username" required placeholder="Enter username">
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Login</button>
+        </form>
+
+        <div class="toggle-text" id="toggleText">
+            Are you a new patient? <a onclick="toggleMode()">Sign Up</a>
+        </div>
+    </div>
+
+    <script>
+        let isSignup = false;
+
+        function toggleMode() {
+            isSignup = !isSignup;
+            const title = document.getElementById('formTitle');
+            const subtitle = document.getElementById('formSubtitle');
+            const btn = document.getElementById('submitBtn');
+            const toggle = document.getElementById('toggleText');
+
+            if (isSignup) {
+                title.textContent = 'Create Patient Account';
+                subtitle.textContent = 'Sign up to book your appointments';
+                btn.textContent = 'Sign Up';
+                toggle.innerHTML = 'Already have an account? <a onclick="toggleMode()">Login</a>';
+            } else {
+                title.textContent = 'Welcome Back';
+                subtitle.textContent = 'Login to your PulseQueue account';
+                btn.textContent = 'Login';
+                toggle.innerHTML = 'Are you a new patient? <a onclick="toggleMode()">Sign Up</a>';
+            }
+            document.getElementById('errorMsg').textContent = '';
+        }
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+
+            errorMsg.textContent = 'Processing...';
+
+            if (isSignup) {
+                // Patient Signup
+                try {
+                    const res = await fetch('http://localhost:8002/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: user, password: pass })
+                    });
+                    const data = await res.json();
+
+                    // The core_backend returns {"success": true} or {"success": False, "message": "error"}
+                    // The proxy might return {"error": "..."}
+                    if (data.success) {
+                        // Wipe old appointment data from previous tests so the booking form shows up!
+                        localStorage.removeItem('appointmentNumber');
+                        localStorage.removeItem('appointmentDate');
+                        localStorage.removeItem('appointmentTime');
+                        localStorage.removeItem('patientBooked');
+
+                        // Immediately log them into their new account
+                        localStorage.setItem('patientUser', user);
+                        window.location.href = "/patient/index.html";
+                    } else if (data.message) {
+                        errorMsg.textContent = data.message;
+                    } else if (data.error) {
+                        errorMsg.textContent = data.error;
+                    } else {
+                        errorMsg.textContent = "Signup failed.";
+                    }
+                } catch (err) {
+                    errorMsg.textContent = 'Server error/CORS error. Please try again.';
+                }
+                return;
+            }
+
+            // Login Logic
+            if (user === "doc" && pass === "doc@123") {
+                window.location.href = "http://localhost:3000";
+            }
+            else if (user === "8121017003" && pass === "reception@123") {
+                sessionStorage.setItem('receptionistAuth', 'true');
+                window.location.href = "/receptionist/dashboard.html";
+            }
+            else {
+                // Check Patient backend
+                try {
+                    const res = await fetch('http://localhost:8002/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: user, password: pass })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        localStorage.setItem('patientUser', user);
+                        window.location.href = "/patient/index.html";
+                    } else {
+                        errorMsg.textContent = "Invalid credentials";
+                    }
+                } catch (err) {
+                    errorMsg.textContent = 'Server error. Please try again.';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

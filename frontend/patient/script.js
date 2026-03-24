@@ -1,13 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.pathname.endsWith('index.html') && localStorage.getItem('appointmentNumber')) {
+        window.location.href = 'success.html';
+        return;
+    }
+
     // Add simple input animations for focus states
     const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="number"], textarea, input[type="date"], select');
-    
+
     inputs.forEach(input => {
         input.addEventListener('focus', (e) => {
             const label = e.target.parentElement.querySelector('label');
             if (label) label.style.color = 'var(--primary-dark)';
         });
-        
+
         input.addEventListener('blur', (e) => {
             const label = e.target.parentElement.querySelector('label');
             if (label) label.style.color = 'var(--text-dark)';
@@ -37,16 +42,16 @@ document.addEventListener('DOMContentLoaded', () => {
         checkbox.addEventListener('change', (e) => {
             const targetId = e.target.getAttribute('data-target');
             const targetEl = document.getElementById(targetId);
-            if(targetEl) {
-                if(e.target.checked) {
+            if (targetEl) {
+                if (e.target.checked) {
                     targetEl.classList.add('active');
                 } else {
                     targetEl.classList.remove('active');
                     // Uncheck any inner checkboxes and clear numbers
                     const innerInputs = targetEl.querySelectorAll('input');
                     innerInputs.forEach(innerInput => {
-                        if(innerInput.type === 'checkbox') innerInput.checked = false;
-                        if(innerInput.type === 'number') innerInput.value = '';
+                        if (innerInput.type === 'checkbox') innerInput.checked = false;
+                        if (innerInput.type === 'number') innerInput.value = '';
                     });
                 }
             }
@@ -59,13 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
         radio.addEventListener('change', (e) => {
             const targetId = e.target.getAttribute('data-target');
             const targetEl = document.getElementById(targetId);
-            if(targetEl) {
-                if(e.target.value === 'yes') {
+            if (targetEl) {
+                if (e.target.value === 'yes') {
                     targetEl.classList.add('active');
                 } else {
                     targetEl.classList.remove('active');
                     const textInput = targetEl.querySelector('input[type="text"]');
-                    if(textInput) textInput.value = '';
+                    if (textInput) textInput.value = '';
                 }
             }
         });
@@ -76,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const btn = loginForm.querySelector('.submit-btn');
-            
+
             btn.innerHTML = `
                 <span>Proceeding...</span>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -91,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('patientName', name);
             localStorage.setItem('patientPhone', phone);
             localStorage.setItem('patientAge', age);
-            
+
             // Redirect to symptoms page
             setTimeout(() => {
                 window.location.href = 'symptoms.html';
@@ -104,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         symptomsForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const btn = symptomsForm.querySelector('.submit-btn');
-            
+
             btn.innerHTML = `
                 <svg class="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: spin 1s linear infinite;">
                     <circle cx="12" cy="12" r="10" stroke="white" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
@@ -130,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set minimum date and handle past time validations
         const dateInput = document.getElementById('appointment_date');
         const timeSelect = document.getElementById('appointment_time');
-        if(dateInput && timeSelect) {
+        if (dateInput && timeSelect) {
             const today = new Date().toISOString().split('T')[0];
             dateInput.setAttribute('min', today);
 
@@ -140,26 +145,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (parts.length < 2) return 0;
                 let [hours, mins] = parts[0].split(':').map(Number);
                 const period = parts[1].toUpperCase();
-                
+
                 if (period === 'PM' && hours !== 12) hours += 12;
                 if (period === 'AM' && hours === 12) hours = 0;
-                
+
                 return hours * 60 + mins;
             };
 
             dateInput.addEventListener('change', (e) => {
                 const selectedDate = e.target.value;
                 const isToday = selectedDate === today;
-                
+
                 const now = new Date();
                 const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
                 Array.from(timeSelect.options).forEach(opt => {
                     if (!opt.value || opt.value === "---") return;
-                    
-                    const startTimeStr = opt.value.split('-')[0].trim(); 
+
+                    const startTimeStr = opt.value.split('-')[0].trim();
                     const slotMinutes = getMinutesFromTimeStr(startTimeStr);
-                    
+
                     // Hide slot if Date is today AND slot time has already passed
                     if (isToday && currentMinutes >= slotMinutes) {
                         opt.style.display = 'none';
@@ -169,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         opt.disabled = false;
                     }
                 });
-                
+
                 // Clear the selection if the currently selected option became hidden
                 if (timeSelect.options[timeSelect.selectedIndex] && timeSelect.disabled) {
                     timeSelect.value = "";
@@ -180,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appointmentForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const btn = appointmentForm.querySelector('.submit-btn');
-            
+
             btn.innerHTML = `
                 <svg class="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: spin 1s linear infinite;">
                     <circle cx="12" cy="12" r="10" stroke="white" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
@@ -198,17 +203,44 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = document.getElementById('appointment_date').value;
             const timeSelect = document.getElementById('appointment_time');
             const timeText = timeSelect.options[timeSelect.selectedIndex].text;
-            
-            // Generate a random 6-digit appointment number
-            const appointmentStr = 'APT-' + Math.floor(100000 + Math.random() * 900000);
 
             localStorage.setItem('appointmentDate', date);
             localStorage.setItem('appointmentTime', timeText);
-            localStorage.setItem('appointmentNumber', appointmentStr);
 
-            setTimeout(() => {
-                window.location.href = 'success.html';
-            }, 800);
+            // Construct payload
+            const payload = {
+                name: localStorage.getItem('patientName') || 'Patient',
+                age: parseInt(localStorage.getItem('patientAge')) || 30,
+                gender: 'Unspecified',
+                symptoms: {
+                    fever: null,
+                    cough: null,
+                    headache: null,
+                    vomiting: null,
+                    pregnancy: false
+                },
+                description: "Online booking"
+            };
+
+            fetch('http://localhost:8002/book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(r => r.json())
+                .then(data => {
+                    localStorage.setItem('appointmentNumber', data.token);
+                    // Also set an explicitly booked flag
+                    localStorage.setItem('patientBooked', 'true');
+                    setTimeout(() => {
+                        window.location.href = 'success.html';
+                    }, 800);
+                })
+                .catch(err => {
+                    console.error('Error booking:', err);
+                    alert('Server error while booking.');
+                    btn.innerHTML = '<span>Book Appointment</span>';
+                });
         });
     }
 });
