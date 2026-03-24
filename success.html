@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Patient Portal Confirmation">
+    <title>Patient Portal | Confirmed</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container">
+        <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+            <div class="success-icon" style="margin: 0 auto 2rem; width: 80px; height: 80px; background: var(--primary-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(255,77,148,0.4);">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6L9 17L4 12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            
+            <h1 style="font-size: 2.2rem; margin-bottom: 1rem;">Appointment Confirmed!</h1>
+            <p style="color: var(--text-dark); font-size: 1.1rem; margin-bottom: 2rem;" id="successMessage">Thank you! Your appointment has been scheduled successfully.</p>
+            
+            <div class="form-section" style="text-align: left; margin-bottom: 2.5rem; background: rgba(255,255,255,0.6);">
+                <h3 style="margin-bottom: 15px; color: var(--primary-dark); border-bottom: 2px solid rgba(255,77,148,0.2); padding-bottom: 8px;">Appointment Details</h3>
+                <p style="margin-bottom: 8px; font-size: 1.15rem;"><strong>Appointment No:</strong> <span id="confirmId" style="color: var(--primary-dark); font-weight: 700;">-</span></p>
+                <p style="margin-bottom: 8px;"><strong>Patient Name:</strong> <span id="confirmName">-</span></p>
+                <p style="margin-bottom: 8px;"><strong>Date:</strong> <span id="confirmDate">-</span></p>
+                <p style="margin-bottom: 8px;"><strong>Time:</strong> <span id="confirmTime">-</span></p>
+            </div>
+
+            <a href="index.html" class="submit-btn" style="text-decoration: none; display: inline-flex;" onclick="localStorage.clear()">
+                <span>Return to Home</span>
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const name = localStorage.getItem('patientName') || 'Patient';
+            const date = localStorage.getItem('appointmentDate') || 'N/A';
+            const time = localStorage.getItem('appointmentTime') || 'N/A';
+            const aptNo = localStorage.getItem('appointmentNumber') || 'APT-000000';
+            
+            document.getElementById('successMessage').textContent = `Thank you, ${name}! Your appointment has been scheduled.`;
+            document.getElementById('confirmId').textContent = aptNo;
+            document.getElementById('confirmName').textContent = name;
+            
+            if(date !== 'N/A') {
+                // If it is a valid date
+                const d = new Date(date);
+                if (!isNaN(d.getTime())) {
+                    document.getElementById('confirmDate').textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                } else {
+                    document.getElementById('confirmDate').textContent = date;
+                }
+            }
+            
+            document.getElementById('confirmTime').textContent = time;
+        });
+    </script>
+</body>
+</html>
