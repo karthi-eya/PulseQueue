@@ -1,0 +1,5 @@
+{
+  "name": "Pulse Queue - Doctor Dashboard",
+  "description": "A clean, efficient healthcare queue management system for doctors to manage patient appointments and sessions.",
+  "requestFramePermissions": []
+}

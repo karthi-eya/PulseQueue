@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Patient Portal symptoms questionnaire">
+    <title>Patient Portal | Symptoms</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container">
+        <div class="glass-card">
+            <header>
+                <h1>Symptoms</h1>
+                <p>Please tell us how you're feeling</p>
+                <div class="step-indicator">
+                    <span class="step completed">1</span>
+                    <span class="step-line active"></span>
+                    <span class="step active">2</span>
+                    <span class="step-line"></span>
+                    <span class="step">3</span>
+                    <span class="step-line"></span>
+                    <span class="step">4</span>
+                </div>
+            </header>
+
+            <form id="symptomsForm">
+                <div class="form-section">
+                    <h2>Symptoms Questionnaire</h2>
+                    <p class="section-desc">Select all that apply and provide details</p>
+                    
+                    <div class="symptom-group">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" name="symptom" value="cold" class="parent-checkbox" data-target="cold-details">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Cold</span>
+                        </label>
+                        <div id="cold-details" class="sub-options">
+                            <label class="custom-checkbox small">
+                                <input type="checkbox" name="cold_type" value="running_nose">
+                                <span class="checkmark"></span>
+                                <span class="label-text">Running Nose</span>
+                            </label>
+                            <label class="custom-checkbox small">
+                                <input type="checkbox" name="cold_type" value="blocked_nose">
+                                <span class="checkmark"></span>
+                                <span class="label-text">Blocked Nose</span>
+                            </label>
+                            <div class="input-group mt-2">
+                                <label>From how many days you are suffering?</label>
+                                <input type="number" name="cold_days" min="1" placeholder="e.g. 3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="symptom-group">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" name="symptom" value="cough" class="parent-checkbox" data-target="cough-details">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Cough</span>
+                        </label>
+                        <div id="cough-details" class="sub-options">
+                            <label class="custom-checkbox small">
+                                <input type="checkbox" name="cough_type" value="dry_cough">
+                                <span class="checkmark"></span>
+                                <span class="label-text">Dry Cough</span>
+                            </label>
+                            <label class="custom-checkbox small">
+                                <input type="checkbox" name="cough_type" value="wet_cough">
+                                <span class="checkmark"></span>
+                                <span class="label-text">Wet Cough</span>
+                            </label>
+                            <div class="input-group mt-2">
+                                <label>From how many days you are suffering?</label>
+                                <input type="number" name="cough_days" min="1" placeholder="e.g. 3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="symptom-group">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" name="symptom" value="fever" class="parent-checkbox" data-target="fever-details">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Fever</span>
+                        </label>
+                        <div id="fever-details" class="sub-options">
+                            <div class="input-group mt-2">
+                                <label>From how many days you are suffering?</label>
+                                <input type="number" name="fever_days" min="1" placeholder="e.g. 3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="symptom-group">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" name="symptom" value="headache" class="parent-checkbox" data-target="headache-details">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Headache</span>
+                        </label>
+                        <div id="headache-details" class="sub-options">
+                            <label class="custom-checkbox small">
+                                <input type="checkbox" name="headache_type" value="migraine">
+                                <span class="checkmark"></span>
+                                <span class="label-text">Migraine</span>
+                            </label>
+                            <label class="custom-checkbox small">
+                                <input type="checkbox" name="headache_type" value="sinus">
+                                <span class="checkmark"></span>
+                                <span class="label-text">Sinus</span>
+                            </label>
+                            <div class="input-group mt-2">
+                                <label>From how many days you are suffering?</label>
+                                <input type="number" name="headache_days" min="1" placeholder="e.g. 3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="symptom-group mt-3">
+                        <label class="section-desc" style="font-size: 1rem; font-weight: 500; color: var(--text-dark); margin:0 0 5px 0; display:block;">Any genetic disorders?</label>
+                        <div class="radio-group">
+                            <label class="custom-radio">
+                                <input type="radio" name="genetic_disorder" value="yes" class="toggle-radio" data-target="genetic-details">
+                                <span class="radio-mark"></span>
+                                <span class="label-text">Yes</span>
+                            </label>
+                            <label class="custom-radio">
+                                <input type="radio" name="genetic_disorder" value="no" class="toggle-radio" data-target="genetic-details" checked>
+                                <span class="radio-mark"></span>
+                                <span class="label-text">No</span>
+                            </label>
+                        </div>
+                        <div id="genetic-details" class="sub-options">
+                            <div class="input-group mt-2">
+                                <label>What is the disorder?</label>
+                                <input type="text" name="genetic_desc" placeholder="Please describe...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="symptom-group mt-3">
+                        <label class="section-desc" style="font-size: 1rem; font-weight: 500; color: var(--text-dark); margin:0 0 5px 0; display:block;">Any surgeries happened before?</label>
+                        <div class="radio-group">
+                            <label class="custom-radio">
+                                <input type="radio" name="surgery" value="yes" class="toggle-radio" data-target="surgery-details">
+                                <span class="radio-mark"></span>
+                                <span class="label-text">Yes</span>
+                            </label>
+                            <label class="custom-radio">
+                                <input type="radio" name="surgery" value="no" class="toggle-radio" data-target="surgery-details" checked>
+                                <span class="radio-mark"></span>
+                                <span class="label-text">No</span>
+                            </label>
+                        </div>
+                        <div id="surgery-details" class="sub-options">
+                            <div class="input-group mt-2">
+                                <label>What surgery?</label>
+                                <input type="text" name="surgery_desc" placeholder="Please describe...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group mt-3">
+                        <label for="other">Describe more!!?</label>
+                        <textarea id="other" rows="3" placeholder="Please describe more..."></textarea>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <a href="index.html" class="back-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Back</span>
+                    </a>
+                    <button type="submit" class="submit-btn flex-2">
+                        <span>Next: Appointment</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
