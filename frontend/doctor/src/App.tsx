@@ -34,17 +34,8 @@ export default function App() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [completedCount, setCompletedCount] = useState(0);
 
-<<<<<<< HEAD
   // Read doctor specialty from sessionStorage (set by unified login)
   const doctorSpecialty = sessionStorage.getItem('doctorSpecialty') || "General Physician";
-=======
-  // Hardcode doctor for now, ideally this would be dynamic upon login
-<<<<<<< HEAD
-  const doctorSpecialty = "doc";
-=======
-  const doctorSpecialty = "General Physician";
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -54,18 +45,8 @@ export default function App() {
         const res = await fetch(`http://localhost:8001/queue/${doctorSpecialty}`);
         const data = await res.json();
 
-<<<<<<< HEAD
         if (data && Array.isArray(data.queue)) {
           const mappedPatients: Patient[] = data.queue.map((p: any) => {
-=======
-<<<<<<< HEAD
-        if (Array.isArray(data)) {
-          const mappedPatients: Patient[] = data.map((p: any) => {
-=======
-        if (data && data.queue) {
-          const mappedPatients: Patient[] = data.queue.map((p: any) => {
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
             // Extract primary symptom string
             let primarySymptom = "Consultation / Follow-up";
             if (p.symptoms && typeof p.symptoms === 'object') {
@@ -80,10 +61,7 @@ export default function App() {
               age: p.age || 0,
               symptom: primarySymptom,
               symptomDetail: JSON.stringify(p.symptoms) + (p.description ? ` | Desc: ${p.description}` : ''),
-<<<<<<< HEAD
               priority: p.priority || 0,
-=======
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
               appointmentTime: new Date((p.arrival_time || (Date.now() / 1000)) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
               session: new Date().getHours() < 14 ? 'morning' : 'afternoon',
               status: 'arrived' as const
@@ -104,13 +82,9 @@ export default function App() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< HEAD
     if (username.trim().toLowerCase() === 'general' && password === 'doc@123') {
       sessionStorage.setItem('doctorAuth', 'true');
       sessionStorage.setItem('doctorSpecialty', 'General Physician');
-=======
-    if (username.trim().toLowerCase() === 'doc' && password === 'doc@123') {
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
       setIsLoggedIn(true);
       setLoginError('');
     } else {
@@ -119,15 +93,10 @@ export default function App() {
   };
 
   const handleDemoLogin = () => {
-<<<<<<< HEAD
     setUsername('general');
     setPassword('doc@123');
     sessionStorage.setItem('doctorAuth', 'true');
     sessionStorage.setItem('doctorSpecialty', 'General Physician');
-=======
-    setUsername('doc');
-    setPassword('doc@123');
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
     setIsLoggedIn(true);
     setLoginError('');
   };
@@ -172,15 +141,7 @@ export default function App() {
         const matchesArrivedFilter = showArrivedOnly ? p.status === 'arrived' : true;
         return matchesSearch && matchesArrivedFilter && p.status !== 'done';
       })
-<<<<<<< HEAD
       .sort((a, b) => a.queueNumber - b.queueNumber);
-=======
-<<<<<<< HEAD
-      .sort((a, b) => a.queueNumber - b.queueNumber);
-=======
-      .sort((a, b) => (parseTime(a.appointmentTime) || 0) - (parseTime(b.appointmentTime) || 0));
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
   }, [searchTerm, patients, showArrivedOnly]);
 
   if (!isLoggedIn) {
@@ -295,11 +256,7 @@ export default function App() {
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-3 mr-4 pr-4 border-r border-slate-200">
                 <div className="text-right">
-<<<<<<< HEAD
                   <p className="text-sm font-semibold text-slate-900">Dr. {doctorSpecialty}</p>
-=======
-                  <p className="text-sm font-semibold text-slate-900">Dr. Sarah Jenkins</p>
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                   <p className="text-xs text-slate-500">{doctorSpecialty}</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-hospital-blue">
@@ -307,14 +264,10 @@ export default function App() {
                 </div>
               </div>
               <button
-<<<<<<< HEAD
                 onClick={() => {
                   sessionStorage.removeItem('doctorAuth');
                   setIsLoggedIn(false);
                 }}
-=======
-                onClick={() => setIsLoggedIn(false)}
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                 className="text-slate-500 hover:text-red-500 transition-colors flex items-center gap-2 text-sm font-medium"
               >
                 <LogOut size={18} />

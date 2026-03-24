@@ -105,10 +105,6 @@ def dashboard_summary():
             d = p["doctor"]
             doctors[d] = doctors.get(d, 0) + 1
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
         return {
             "total_waiting": total_waiting,
             "doctor_load": doctors
@@ -116,35 +112,14 @@ def dashboard_summary():
 
     except:
         return {"error": "Dashboard failed"}
-<<<<<<< HEAD
-=======
-=======
-    return {
-        "total_waiting": total_waiting,
-        "doctor_load": doctors
-    }
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
 
 # -------------------------
 # Add Walk-in Patient
 # -------------------------
 @app.post("/add-patient")
 def add_patient(data: dict):
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
     try:
         response = requests.post(f"{CORE_BACKEND_URL}/add-patient", json=data)
         return response.json()
     except:
-<<<<<<< HEAD
         return {"error": "Add patient failed"}
-=======
-        return {"error": "Add patient failed"}
-=======
-    response = requests.post(f"{CORE_BACKEND_URL}/add-patient", json=data)
-    return response.json()
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8

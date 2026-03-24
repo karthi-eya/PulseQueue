@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
-
-=======
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -74,15 +67,7 @@
             padding: 2.5rem;
             width: 100%;
             max-width: 400px;
-<<<<<<< HEAD
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
-=======
-<<<<<<< HEAD
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
-=======
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
         }
 
         h1 {
@@ -169,14 +154,7 @@
         }
     </style>
 </head>
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
-
-=======
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
 <body>
     <div class="background-shapes">
         <div class="shape shape-1"></div>
@@ -194,15 +172,7 @@
                 <label for="username">Username / User ID</label>
                 <input type="text" id="username" required placeholder="Enter username">
             </div>
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
-
-=======
-            
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
             <div class="input-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" required placeholder="••••••••">
@@ -225,18 +195,8 @@
             const subtitle = document.getElementById('formSubtitle');
             const btn = document.getElementById('submitBtn');
             const toggle = document.getElementById('toggleText');
-<<<<<<< HEAD
 
             if (isSignup) {
-=======
-<<<<<<< HEAD
-
-            if (isSignup) {
-=======
-            
-            if(isSignup) {
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                 title.textContent = 'Create Patient Account';
                 subtitle.textContent = 'Sign up to book your appointments';
                 btn.textContent = 'Sign Up';
@@ -258,23 +218,11 @@
 
             errorMsg.textContent = 'Processing...';
 
-<<<<<<< HEAD
             if (isSignup) {
-=======
-<<<<<<< HEAD
-            if (isSignup) {
-=======
-            if(isSignup) {
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                 // Patient Signup
                 try {
                     const res = await fetch('http://localhost:8002/signup', {
                         method: 'POST',
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: user, password: pass })
                     });
@@ -301,29 +249,10 @@
                     }
                 } catch (err) {
                     errorMsg.textContent = 'Server error/CORS error. Please try again.';
-<<<<<<< HEAD
-=======
-=======
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({username: user, password: pass})
-                    });
-                    const data = await res.json();
-                    if(data.success) {
-                        alert('Signup successful! Please login.');
-                        toggleMode(); // switch back to login
-                        document.getElementById('password').value = '';
-                    } else {
-                        errorMsg.textContent = data.message;
-                    }
-                } catch(err) {
-                    errorMsg.textContent = 'Server error. Please try again.';
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                 }
                 return;
             }
 
-<<<<<<< HEAD
             // Doctor Login Logic (5 profiles, same password)
             const doctorProfiles = {
                 "general": "General Physician",
@@ -337,11 +266,6 @@
                 sessionStorage.setItem('doctorAuth', 'true');
                 sessionStorage.setItem('doctorSpecialty', doctorProfiles[user.toLowerCase()]);
                 window.location.href = "/doctor/dist/index.html";
-=======
-            // Login Logic
-            if (user === "doc" && pass === "doc@123") {
-                window.location.href = "http://localhost:3000";
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
             }
             else if (user === "8121017003" && pass === "reception@123") {
                 sessionStorage.setItem('receptionistAuth', 'true');
@@ -352,53 +276,22 @@
                 try {
                     const res = await fetch('http://localhost:8002/login', {
                         method: 'POST',
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: user, password: pass })
                     });
                     const data = await res.json();
                     if (data.success) {
-<<<<<<< HEAD
-=======
-=======
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({username: user, password: pass})
-                    });
-                    const data = await res.json();
-                    if(data.success) {
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                         localStorage.setItem('patientUser', user);
                         window.location.href = "/patient/index.html";
                     } else {
                         errorMsg.textContent = "Invalid credentials";
                     }
-<<<<<<< HEAD
                 } catch (err) {
-=======
-<<<<<<< HEAD
-                } catch (err) {
-=======
-                } catch(err) {
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
                     errorMsg.textContent = 'Server error. Please try again.';
                 }
             }
         });
     </script>
 </body>
-<<<<<<< HEAD
 
 </html>
-=======
-<<<<<<< HEAD
-
-</html>
-=======
-</html>
->>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
->>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
