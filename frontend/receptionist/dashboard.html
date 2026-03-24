@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="background-shapes">
         <div class="shape shape-1"></div>
@@ -21,11 +23,21 @@
             </div>
             <ul class="nav-links">
                 <li class="active" data-tab="appointments">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
                     Today's Appointments
                 </li>
                 <li data-tab="queue">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 21V19C17 16.7909 15.2091 15 13 15H5C2.79086 15 1 16.7909 1 19V21M23 21V19C23 17.6569 22.3395 16.4673 21.3197 15.7335M16.13 5.43262C17.2625 6.09647 18 7.3732 18 8.83333C18 10.3755 17.1856 11.7208 15.9554 12.3813M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M17 21V19C17 16.7909 15.2091 15 13 15H5C2.79086 15 1 16.7909 1 19V21M23 21V19C23 17.6569 22.3395 16.4673 21.3197 15.7335M16.13 5.43262C17.2625 6.09647 18 7.3732 18 8.83333C18 10.3755 17.1856 11.7208 15.9554 12.3813M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
                     Today's Queue
                 </li>
             </ul>
@@ -37,9 +49,14 @@
         <main class="content-area">
             <!-- Appointments Tab -->
             <section id="appointments" class="tab-content active">
-                <header class="content-header">
-                    <h1>Today's Appointments</h1>
-                    <p>Overview of all scheduled patient visits for the day.</p>
+                <header class="content-header"
+                    style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1>Today's Appointments</h1>
+                        <p>Overview of all scheduled patient visits for the day.</p>
+                    </div>
+                    <button onclick="openAddModal()" class="submit-btn"
+                        style="width: auto; padding: 0.8rem 1.5rem; margin: 0;">Add Appointment</button>
                 </header>
 
                 <div class="appointment-list" id="appointmentList">
@@ -53,15 +70,41 @@
                     <h1>Today's Live Queue</h1>
                     <p>Patients currently waiting in the clinic lobby.</p>
                 </header>
-                
-                <div class="glass-card full-width text-center" style="padding: 3rem;">
-                    <h3 style="color: var(--text-light);">No patients currently in queue.</h3>
-                    <p>When patients check in or arrive, they will appear here.</p>
+
+                <div class="appointment-list" id="queueList">
+                    <!-- Cards will be populated dynamically via API -->
                 </div>
             </section>
         </main>
     </div>
-    
+    <div id="walkinModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div class="glass-card" style="background:#fff; padding:2rem; width:400px; max-width:90%;">
+            <h2 style="margin-top:0;">Walk-in Patient</h2>
+            <form id="addPatientForm">
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>Patient Name</label>
+                    <input type="text" id="walkinName" required style="width:100%; padding: 0.5rem;">
+                </div>
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>Patient Age</label>
+                    <input type="number" id="walkinAge" required style="width:100%; padding: 0.5rem;">
+                </div>
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>Reason / Symptoms</label>
+                    <input type="text" id="walkinDesc" required style="width:100%; padding: 0.5rem;"
+                        placeholder="e.g. Fever, Cough">
+                </div>
+                <div style="display:flex; gap:1rem; margin-top:2rem;">
+                    <button type="button" onclick="closeAddModal()" class="submit-btn"
+                        style="background:var(--text-light);">Cancel</button>
+                    <button type="submit" class="submit-btn">Add to Queue</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
+
 </html>

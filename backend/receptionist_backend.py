@@ -98,3 +98,11 @@ def dashboard_summary():
         "total_waiting": total_waiting,
         "doctor_load": doctors
     }
+
+# -------------------------
+# Add Walk-in Patient
+# -------------------------
+@app.post("/add-patient")
+def add_patient(data: dict):
+    response = requests.post(f"{CORE_BACKEND_URL}/add-patient", json=data)
+    return response.json()

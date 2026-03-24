@@ -1,13 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Patient Portal Confirmation">
-    <title>Patient Portal | Confirmed</title>
+    <title>Patient Portal | Live Queue</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .queue-box {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1);
+        }
+
+        .queue-number {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin: 1rem 0;
+        }
+
+        .wait-time {
+            font-size: 1.25rem;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+    </style>
 </head>
+
 <body>
     <div class="background-shapes">
         <div class="shape shape-1"></div>
@@ -16,53 +41,82 @@
     </div>
 
     <div class="container">
-        <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
-            <div class="success-icon" style="margin: 0 auto 2rem; width: 80px; height: 80px; background: var(--primary-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(255,77,148,0.4);">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 6L9 17L4 12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <div class="glass-card" style="text-align: center; padding: 3rem 2rem;">
+            <div class="success-icon"
+                style="margin: 0 auto 1.5rem; width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6L9 17L4 12" stroke="white" stroke-width="3" stroke-linecap="round"
+                        stroke-linejoin="round" />
                 </svg>
             </div>
-            
-            <h1 style="font-size: 2.2rem; margin-bottom: 1rem;">Appointment Confirmed!</h1>
-            <p style="color: var(--text-dark); font-size: 1.1rem; margin-bottom: 2rem;" id="successMessage">Thank you! Your appointment has been scheduled successfully.</p>
-            
-            <div class="form-section" style="text-align: left; margin-bottom: 2.5rem; background: rgba(255,255,255,0.6);">
-                <h3 style="margin-bottom: 15px; color: var(--primary-dark); border-bottom: 2px solid rgba(255,77,148,0.2); padding-bottom: 8px;">Appointment Details</h3>
-                <p style="margin-bottom: 8px; font-size: 1.15rem;"><strong>Appointment No:</strong> <span id="confirmId" style="color: var(--primary-dark); font-weight: 700;">-</span></p>
-                <p style="margin-bottom: 8px;"><strong>Patient Name:</strong> <span id="confirmName">-</span></p>
-                <p style="margin-bottom: 8px;"><strong>Date:</strong> <span id="confirmDate">-</span></p>
-                <p style="margin-bottom: 8px;"><strong>Time:</strong> <span id="confirmTime">-</span></p>
+
+            <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Appointment Confirmed!</h1>
+            <p style="color: var(--text-dark); font-size: 1.1rem; margin-bottom: 1rem;" id="successMessage">Your
+                appointment has been scheduled.</p>
+            <p style="color: var(--text-light); font-size: 0.95rem; margin-bottom: 1.5rem;"><strong>Token ID:</strong>
+                <span id="confirmId">-</span></p>
+
+            <div class="queue-box" id="queueBox">
+                <h3
+                    style="color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem;">
+                    Your Queue Status</h3>
+                <div id="queueStatusContent">
+                    <p style="margin-top: 1rem; color: var(--text-dark);">Please check in with the receptionist when you
+                        arrive at the hospital to enter the live queue.</p>
+                </div>
             </div>
 
-            <a href="index.html" class="submit-btn" style="text-decoration: none; display: inline-flex;" onclick="localStorage.clear()">
-                <span>Return to Home</span>
+            <a href="/" class="submit-btn"
+                style="text-decoration: none; display: inline-flex; width: auto; padding: 0.8rem 2rem; background: var(--text-light);"
+                onclick="localStorage.clear()">
+                <span>Logout</span>
             </a>
         </div>
     </div>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const name = localStorage.getItem('patientName') || 'Patient';
-            const date = localStorage.getItem('appointmentDate') || 'N/A';
-            const time = localStorage.getItem('appointmentTime') || 'N/A';
-            const aptNo = localStorage.getItem('appointmentNumber') || 'APT-000000';
-            
+            const token = localStorage.getItem('appointmentNumber');
+
             document.getElementById('successMessage').textContent = `Thank you, ${name}! Your appointment has been scheduled.`;
-            document.getElementById('confirmId').textContent = aptNo;
-            document.getElementById('confirmName').textContent = name;
-            
-            if(date !== 'N/A') {
-                // If it is a valid date
-                const d = new Date(date);
-                if (!isNaN(d.getTime())) {
-                    document.getElementById('confirmDate').textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                } else {
-                    document.getElementById('confirmDate').textContent = date;
+            document.getElementById('confirmId').textContent = token || 'N/A';
+
+            if (!token) return;
+
+            // Poll for queue status every 3 seconds
+            setInterval(async () => {
+                try {
+                    // Check wait time and queue position
+                    const res = await fetch(`http://localhost:8002/wait-time/${token}`);
+                    const data = await res.json();
+
+                    const queueBox = document.getElementById('queueStatusContent');
+
+                    if (data.message && data.message.includes("Not in queue") || data.message && data.message.includes("Arrive at hospital")) {
+                        // User has not arrived
+                        queueBox.innerHTML = `
+                            <p style="margin-top: 1rem; color: var(--text-dark); font-weight: 500;">
+                                You are booked, but not in the active queue yet. <br><br>
+                                Please see the receptionist to check in upon arrival.
+                            </p>
+                        `;
+                    } else if (data.queue_position !== undefined) {
+                        // User has arrived
+                        queueBox.innerHTML = `
+                            <div class="queue-number">#${data.queue_position}</div>
+                            <div class="wait-time">Estimated Wait: ~${data.estimated_wait_minutes} mins</div>
+                            <p style="margin-top: 1rem; color: var(--text-light); font-size: 0.9rem;">
+                                Assigned Doctor: <strong style="color: var(--text-dark);">${data.assigned_doctor}</strong>
+                            </p>
+                        `;
+                    }
+                } catch (e) {
+                    console.error("Error polling queue status:", e);
                 }
-            }
-            
-            document.getElementById('confirmTime').textContent = time;
+            }, 3000);
         });
     </script>
 </body>
+
 </html>

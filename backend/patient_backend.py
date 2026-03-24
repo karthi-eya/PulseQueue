@@ -126,3 +126,16 @@ def patient_dashboard(token: str):
         "message": "You are booked but not yet arrived",
         "token": token
     }
+
+# -------------------------
+# Auth
+# -------------------------
+@app.post("/signup")
+def signup(data: dict):
+    response = requests.post(f"{CORE_BACKEND_URL}/signup", json=data)
+    return response.json()
+
+@app.post("/login")
+def login(data: dict):
+    response = requests.post(f"{CORE_BACKEND_URL}/login", json=data)
+    return response.json()

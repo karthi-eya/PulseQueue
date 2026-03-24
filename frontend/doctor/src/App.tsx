@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
-import { 
-  Stethoscope, 
-  User, 
-  Lock, 
-  LogOut, 
-  Sun, 
-  Moon, 
-  Users, 
-  Clock, 
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  Stethoscope,
+  User,
+  Lock,
+  LogOut,
+  Sun,
+  Moon,
+  Users,
+  Clock,
   ChevronRight,
   Activity,
   Search,
@@ -21,7 +21,6 @@ import {
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MOCK_PATIENTS } from './constants';
 import { Patient } from './types';
 
 export default function App() {
@@ -30,56 +29,96 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [showArrivedOnly, setShowArrivedOnly] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [completedCount, setCompletedCount] = useState(0);
+
+  // Hardcode doctor for now, ideally this would be dynamic upon login
+  const doctorSpecialty = "General Physician";
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const fetchQueue = async () => {
+      try {
+        const res = await fetch(`http://localhost:8001/queue/${doctorSpecialty}`);
+        const data = await res.json();
+
+        if (data && data.queue) {
+          const mappedPatients: Patient[] = data.queue.map((p: any) => {
+            // Extract primary symptom string
+            let primarySymptom = "Consultation / Follow-up";
+            if (p.symptoms && typeof p.symptoms === 'object') {
+              const active = Object.entries(p.symptoms).find(([k, v]) => v !== null && v !== false);
+              if (active) primarySymptom = active[0].charAt(0).toUpperCase() + active[0].slice(1);
+            }
+
+            return {
+              id: p.token,
+              queueNumber: p.queue_number || p.position,
+              name: p.name,
+              age: p.age || 0,
+              symptom: primarySymptom,
+              symptomDetail: JSON.stringify(p.symptoms) + (p.description ? ` | Desc: ${p.description}` : ''),
+              appointmentTime: new Date((p.arrival_time || (Date.now() / 1000)) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+              session: new Date().getHours() < 14 ? 'morning' : 'afternoon',
+              status: 'arrived' as const
+            };
+          });
+
+          setPatients(mappedPatients);
+        }
+      } catch (err) {
+        console.error("Error fetching live queue data:", err);
+      }
+    };
+
+    fetchQueue();
+    const interval = setInterval(fetchQueue, 3000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim().toLowerCase() === 'doctor' && password === 'password123') {
+    if (username.trim().toLowerCase() === 'doc' && password === 'doc@123') {
       setIsLoggedIn(true);
       setLoginError('');
     } else {
-      setLoginError('Invalid credentials. Try "doctor" and "password123"');
+      setLoginError('Invalid credentials. Try "doc" and "doc@123"');
     }
   };
 
   const handleDemoLogin = () => {
-    setUsername('doctor');
-    setPassword('password123');
+    setUsername('doc');
+    setPassword('doc@123');
     setIsLoggedIn(true);
     setLoginError('');
   };
 
-  const updatePatientStatus = (id: string, status: Patient['status']) => {
-    setPatients(prev => {
-      const updated = prev.map(p => p.id === id ? { ...p, status } : p);
-      
-      // If a patient is marked done, automatically mark the next scheduled patient as arrived
-      if (status === 'done') {
-        const nextScheduled = [...updated]
-          .filter(p => p.status === 'scheduled')
-          .sort((a, b) => parseTime(a.appointmentTime) - parseTime(b.appointmentTime))[0];
-        
-        if (nextScheduled) {
-          return updated.map(p => p.id === nextScheduled.id ? { ...p, status: 'arrived' as const } : p);
+  const callNextPatient = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:8001/next/${doctorSpecialty}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.message) {
+        setCompletedCount(prev => prev + 1);
+        setPatients(prev => prev.filter(p => p.id !== id));
+        if (selectedPatient && selectedPatient.id === id) {
+          setSelectedPatient(null);
         }
       }
-      return updated;
-    });
+    } catch (err) {
+      console.error("Failed to dismiss patient", err);
+    }
   };
 
-  const morningPatients = useMemo(() => 
-    patients.filter(p => p.session === 'morning' && p.status !== 'done'), 
-  [patients]);
-  
-  const afternoonPatients = useMemo(() => 
-    patients.filter(p => p.session === 'afternoon' && p.status !== 'done'), 
-  [patients]);
+  const morningPatients = useMemo(() =>
+    patients.filter(p => p.session === 'morning' && p.status !== 'done'),
+    [patients]);
 
-  const completedCount = useMemo(() => 
-    patients.filter(p => p.status === 'done').length, 
-  [patients]);
+  const afternoonPatients = useMemo(() =>
+    patients.filter(p => p.session === 'afternoon' && p.status !== 'done'),
+    [patients]);
 
   const parseTime = (timeStr: string) => {
     const [time, modifier] = timeStr.split(' ');
@@ -93,17 +132,17 @@ export default function App() {
     return [...patients]
       .filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            p.symptom.toLowerCase().includes(searchTerm.toLowerCase());
+          p.symptom.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesArrivedFilter = showArrivedOnly ? p.status === 'arrived' : true;
         return matchesSearch && matchesArrivedFilter && p.status !== 'done';
       })
-      .sort((a, b) => parseTime(a.appointmentTime) - parseTime(b.appointmentTime));
+      .sort((a, b) => (parseTime(a.appointmentTime) || 0) - (parseTime(b.appointmentTime) || 0));
   }, [searchTerm, patients, showArrivedOnly]);
 
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-hospital-bg">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md"
@@ -124,12 +163,12 @@ export default function App() {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <User size={18} />
                   </span>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-hospital-blue focus:border-transparent outline-none transition-all"
-                    placeholder="Enter your ID"
+                    placeholder="Enter doc"
                     required
                   />
                 </div>
@@ -141,8 +180,8 @@ export default function App() {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <Lock size={18} />
                   </span>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-hospital-blue focus:border-transparent outline-none transition-all"
@@ -153,7 +192,7 @@ export default function App() {
               </div>
 
               {loginError && (
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="text-red-500 text-sm text-center"
@@ -162,7 +201,7 @@ export default function App() {
                 </motion.p>
               )}
 
-              <button 
+              <button
                 type="submit"
                 className="w-full bg-hospital-blue hover:bg-hospital-blue/90 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-hospital-blue/20 active:scale-[0.98]"
               >
@@ -178,7 +217,7 @@ export default function App() {
                 </div>
               </div>
 
-              <button 
+              <button
                 type="button"
                 onClick={handleDemoLogin}
                 className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-3 rounded-xl transition-all active:scale-[0.98]"
@@ -187,7 +226,7 @@ export default function App() {
               </button>
             </form>
           </div>
-          
+
           <p className="text-center text-slate-400 text-sm mt-8">
             &copy; 2026 Pulse Queue Healthcare Systems
           </p>
@@ -208,18 +247,18 @@ export default function App() {
               </div>
               <span className="text-xl font-bold text-slate-900 tracking-tight">Pulse Queue</span>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-3 mr-4 pr-4 border-r border-slate-200">
                 <div className="text-right">
                   <p className="text-sm font-semibold text-slate-900">Dr. Sarah Jenkins</p>
-                  <p className="text-xs text-slate-500">Cardiologist</p>
+                  <p className="text-xs text-slate-500">{doctorSpecialty}</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-hospital-blue">
                   <User size={20} />
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsLoggedIn(false)}
                 className="text-slate-500 hover:text-red-500 transition-colors flex items-center gap-2 text-sm font-medium"
               >
@@ -235,12 +274,12 @@ export default function App() {
         {/* Header Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-slate-900">Dashboard Overview</h2>
-          <p className="text-slate-500">Welcome back, here is your patient queue for today.</p>
+          <p className="text-slate-500">Welcome back, here is your patient live queue.</p>
         </div>
 
         {/* Session Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <motion.div 
+          <motion.div
             whileHover={{ y: -4 }}
             className="medical-card p-6 flex items-center gap-6"
           >
@@ -253,11 +292,11 @@ export default function App() {
                 <span className="text-3xl font-bold text-slate-900">{morningPatients.length}</span>
                 <span className="text-slate-400 text-sm">Patients</span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">10:00 AM - 01:15 PM</p>
+              <p className="text-xs text-slate-400 mt-1">Live Updating</p>
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -4 }}
             className="medical-card p-6 flex items-center justify-between"
           >
@@ -271,10 +310,10 @@ export default function App() {
                   <span className="text-3xl font-bold text-slate-900">{afternoonPatients.length}</span>
                   <span className="text-slate-400 text-sm">Patients</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">03:00 PM - 08:00 PM</p>
+                <p className="text-xs text-slate-400 mt-1">Live Updating</p>
               </div>
             </div>
-            
+
             <div className="text-right border-l border-slate-100 pl-6">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Completed</p>
               <div className="flex items-center justify-end gap-2">
@@ -293,29 +332,30 @@ export default function App() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex items-center gap-2">
                 <Users className="text-hospital-blue" size={20} />
-                <h3 className="font-bold text-slate-900">Patient Queue List</h3>
+                <h3 className="font-bold text-slate-900">Live Active Queue</h3>
               </div>
-              
+
               <div className="flex bg-slate-100 p-1 rounded-lg">
-                <button 
+                <button
                   onClick={() => setShowArrivedOnly(true)}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${showArrivedOnly ? 'bg-white text-hospital-blue shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
                   Arrived Only
                 </button>
-                <button 
-                  onClick={() => setShowArrivedOnly(false)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${!showArrivedOnly ? 'bg-white text-hospital-blue shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                <button
+                  disabled
+                  title="Offline schedules are managed locally or via Reception"
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${!showArrivedOnly ? 'bg-white text-hospital-blue shadow-sm' : 'text-slate-300'}`}
                 >
                   All Scheduled
                 </button>
               </div>
             </div>
-            
+
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search patients..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -340,7 +380,7 @@ export default function App() {
                 <AnimatePresence mode='popLayout'>
                   {filteredPatients.length > 0 ? (
                     filteredPatients.map((patient) => (
-                      <motion.tr 
+                      <motion.tr
                         key={patient.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -354,7 +394,7 @@ export default function App() {
                           </span>
                         </td>
                         <td className="medical-table-cell">
-                          <button 
+                          <button
                             onClick={() => setSelectedPatient(patient)}
                             className="font-semibold text-slate-900 hover:text-hospital-blue transition-colors text-left"
                           >
@@ -371,33 +411,18 @@ export default function App() {
                           </div>
                         </td>
                         <td className="medical-table-cell">
-                          {patient.status === 'arrived' ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-bold uppercase tracking-wider">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                              Arrived
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">
-                              Scheduled
-                            </span>
-                          )}
+                          <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-bold uppercase tracking-wider">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Waiting
+                          </span>
                         </td>
                         <td className="medical-table-cell text-right">
-                          {patient.status === 'arrived' ? (
-                            <button 
-                              onClick={() => updatePatientStatus(patient.id, 'done')}
-                              className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-all active:scale-95"
-                            >
-                              Mark Done
-                            </button>
-                          ) : (
-                            <button 
-                              onClick={() => updatePatientStatus(patient.id, 'arrived')}
-                              className="bg-hospital-blue hover:bg-hospital-blue/90 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-all active:scale-95"
-                            >
-                              Check In
-                            </button>
-                          )}
+                          <button
+                            onClick={() => callNextPatient(patient.id)}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-all active:scale-95"
+                          >
+                            Check In / Next
+                          </button>
                         </td>
                       </motion.tr>
                     ))
@@ -406,7 +431,7 @@ export default function App() {
                       <td colSpan={6} className="py-12 text-center text-slate-400">
                         <div className="flex flex-col items-center gap-2">
                           <Users size={40} className="opacity-20" />
-                          <p>No patients currently in the selected queue.</p>
+                          <p>No patients currently in the live queue for your specialty.</p>
                         </div>
                       </td>
                     </tr>
@@ -415,10 +440,10 @@ export default function App() {
               </tbody>
             </table>
           </div>
-          
+
           <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
             <p className="text-xs text-slate-400">
-              Showing {filteredPatients.length} patients scheduled for today
+              Showing {filteredPatients.length} patients waiting in Live Queue
             </p>
           </div>
         </div>
@@ -427,7 +452,7 @@ export default function App() {
         <AnimatePresence>
           {selectedPatient && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -440,17 +465,17 @@ export default function App() {
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-900">{selectedPatient.name}</h3>
-                      <p className="text-xs text-slate-500">Patient ID: #{selectedPatient.id}</p>
+                      <p className="text-xs text-slate-500">Patient Token: {selectedPatient.id}</p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setSelectedPatient(null)}
                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
                   >
                     <X size={20} />
                   </button>
                 </div>
-                
+
                 <div className="p-6 space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -458,8 +483,8 @@ export default function App() {
                       <p className="text-sm font-semibold text-slate-700">{selectedPatient.age} Years</p>
                     </div>
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">Appointment</p>
-                      <p className="text-sm font-semibold text-slate-700">{selectedPatient.appointmentTime}</p>
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">Primary Symptom</p>
+                      <p className="text-sm font-semibold text-slate-700">{selectedPatient.symptom}</p>
                     </div>
                   </div>
 
@@ -477,7 +502,7 @@ export default function App() {
                 </div>
 
                 <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex justify-end">
-                  <button 
+                  <button
                     onClick={() => setSelectedPatient(null)}
                     className="px-6 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all active:scale-95"
                   >
