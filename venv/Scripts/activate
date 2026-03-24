@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\KARTHIKEYA\OneDrive\Desktop\GitHub\webdev_lab1\PulseQueue\venv"
+VIRTUAL_ENV="C:\GitHub\webdev_lab1\PulseQueue\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

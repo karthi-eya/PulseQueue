@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\KARTHIKEYA\OneDrive\Desktop\GitHub\webdev_lab1\PulseQueue\venv
+set VIRTUAL_ENV=C:\GitHub\webdev_lab1\PulseQueue\venv
 
 if not defined PROMPT set PROMPT=$P$G
 
