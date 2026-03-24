@@ -125,6 +125,10 @@ def patient_dashboard(token: str):
                     "priority": p["priority"]
                 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
         return {
             "status": "booked_not_arrived",
             "message": "You are booked but not yet arrived",
@@ -133,12 +137,25 @@ def patient_dashboard(token: str):
 
     except:
         return {"error": "Dashboard failed"}
+<<<<<<< HEAD
+=======
+=======
+    return {
+        "message": "You are booked but not yet arrived",
+        "token": token
+    }
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
+>>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
 
 # -------------------------
 # Auth
 # -------------------------
 @app.post("/signup")
 def signup(data: dict):
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
     try:
         response = requests.post(f"{CORE_BACKEND_URL}/signup", json=data)
         return response.json()
@@ -151,4 +168,17 @@ def login(data: dict):
         response = requests.post(f"{CORE_BACKEND_URL}/login", json=data)
         return response.json()
     except:
+<<<<<<< HEAD
         return {"error": "Login failed"}
+=======
+        return {"error": "Login failed"}
+=======
+    response = requests.post(f"{CORE_BACKEND_URL}/signup", json=data)
+    return response.json()
+
+@app.post("/login")
+def login(data: dict):
+    response = requests.post(f"{CORE_BACKEND_URL}/login", json=data)
+    return response.json()
+>>>>>>> ebd3769429badfa257ba7bbfacbd6b5fcd9faecf
+>>>>>>> 5bf515a7459975030f5ec15afd6e1fca23c784f8
