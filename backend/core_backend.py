@@ -1,13 +1,31 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional, Dict
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
 import time
 
-app = FastAPI()
+# ✅ Import AUTH (ONLY ONE SYSTEM)
+from auth import router as auth_router, SECRET_KEY, ALGORITHM
+
+app = FastAPI(title="PulseQueue API", version="2.0")
+
+# ✅ Mount auth routes
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 # -------------------------
-# CORS
+# JWT DEPENDENCY (OPTIONAL FOR NOW)
+# -------------------------
+_bearer = HTTPBearer()
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(_bearer)):
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+# -------------------------
+# CORS (ALLOW FRONTEND)
 # -------------------------
 app.add_middleware(
     CORSMiddleware,
@@ -18,309 +36,247 @@ app.add_middleware(
 )
 
 # -------------------------
-# In-memory storage
+# IN-MEMORY STORAGE
 # -------------------------
 patients = []
-token_counter = 100
-AGING_FACTOR = 0.01   # ✅ FIXED (was too high)
 
-users = {}  # username -> password
+AGING_FACTOR = 0.1
 
 # -------------------------
-# Models
-# -------------------------
-class Symptoms(BaseModel):
-    cough: Optional[Dict] = None
-    fever: Optional[Dict] = None
-    headache: Optional[Dict] = None
-    vomiting: Optional[Dict] = None
-    pregnancy: Optional[bool] = False
-
-class PatientInput(BaseModel):
-    name: str
-    age: int
-    gender: str
-    symptoms: Symptoms
-    genetic_disease: Optional[str] = None
-    description: Optional[str] = ""
-
-class LoginData(BaseModel):
-    username: str
-    password: str
-
-# -------------------------
-# Doctor Assignment (5 Specialties)
-# General Physician, Cardiologist, Dermatologist, Neurologist, ENT
-# -------------------------
-CARDIO_KEYWORDS = ["chest pain", "heart", "palpitations", "irregular heartbeat", "blood pressure", "cardiac", "tightness"]
-DERMA_KEYWORDS = ["skin", "rash", "acne", "eczema", "itching", "allergy", "hives", "psoriasis", "dermatitis", "boils"]
-NEURO_KEYWORDS = ["migraine", "seizure", "convulsions", "paralysis", "numbness", "dizziness", "speech difficulty", "blurred vision"]
-ENT_KEYWORDS = ["ear", "nose", "throat", "sinus", "tonsil", "hearing", "snoring", "nasal", "sore throat", "cough"]
-
-def assign_doctor(symptoms, description=""):
-    desc = description.lower() if description else ""
-
-    # 1. Check NLP description keywords first (highest specificity)
-    for kw in CARDIO_KEYWORDS:
-        if kw in desc:
-            return "Cardiologist"
-    for kw in DERMA_KEYWORDS:
-        if kw in desc:
-            return "Dermatologist"
-    for kw in NEURO_KEYWORDS:
-        if kw in desc:
-            return "Neurologist"
-    for kw in ENT_KEYWORDS:
-        if kw in desc:
-            return "ENT"
-
-    # 2. Check structured symptom objects
-    if symptoms.headache:
-        return "Neurologist"
-
-    if symptoms.cough:
-        return "ENT"
-
-    if symptoms.pregnancy:
-        return "General Physician"
-
-    if symptoms.vomiting:
-        return "General Physician"
-
-    if symptoms.fever:
-        return "General Physician"
-
-    return "General Physician"
-
-# -------------------------
-# NLP Keyword Scores
+# KEYWORD-BASED SCORING
 # -------------------------
 KEYWORD_SCORES = {
-    "chest pain": 50, "breathing": 50, "shortness of breath": 50,
-    "difficulty breathing": 50, "dizziness": 20, "bleeding": 60,
-    "internal bleeding": 70, "unconscious": 80, "fainting": 60,
-    "severe pain": 40, "sharp pain": 30, "pressure": 20,
-    "tightness": 30, "palpitations": 40, "irregular heartbeat": 50,
-    "high fever": 40, "persistent cough": 20, "vomiting blood": 70,
-    "blood in stool": 70, "weakness": 20, "fatigue": 15,
-    "blurred vision": 30, "loss of vision": 60,
-    "speech difficulty": 60, "paralysis": 80, "numbness": 50,
-    "seizure": 80, "convulsions": 80, "head injury": 70,
-    "trauma": 70, "burn": 50, "infection": 30, "swelling": 20,
-    "dehydration": 30, "diarrhea": 20, "persistent vomiting": 40,
-    "abdominal pain": 30, "severe headache": 40,
-    "migraine": 30, "sinus": 20, "coughing blood": 70,
-    "breathlessness": 50
+    "chest pain": 40,
+    "unconscious": 50,
+    "bleeding": 45,
+    "breathing problem": 45,
+    "high fever": 30,
+    "vomiting": 20,
+    "pregnant": 25
 }
 
 # -------------------------
-# Severity Calculation
+# CALCULATE SEVERITY
 # -------------------------
-def calculate_severity(data: PatientInput):
+def calculate_severity(data):
     score = 0
+    symptoms = data.get("symptoms", {})
 
-    if data.symptoms.fever:
-        temp = data.symptoms.fever.get("temp", 98)
-        if temp > 102: score += 40
-        elif temp > 99: score += 20
+    if symptoms.get("fever") and isinstance(symptoms["fever"], dict):
+        temp = symptoms["fever"].get("temperature", 98)
+        days = symptoms["fever"].get("days", 0)
+        if temp > 102:
+            score += 30
+        elif temp > 100:
+            score += 20
+        score += days * 2
 
-    if data.symptoms.cough:
-        if data.symptoms.cough.get("type") == "wet":
-            score += 15
-        else:
-            score += 10
+    if symptoms.get("cough") and isinstance(symptoms["cough"], dict):
+        score += symptoms["cough"].get("days", 0) * 2
 
-    if data.symptoms.headache:
-        if data.symptoms.headache.get("type") == "migraine":
-            score += 25
-        elif data.symptoms.headache.get("type") == "sinus":
-            score += 15
+    if symptoms.get("vomiting") and isinstance(symptoms["vomiting"], dict):
+        score += 15 + symptoms["vomiting"].get("days", 0) * 2
 
-    if data.symptoms.vomiting:
-        days = data.symptoms.vomiting.get("days", 0)
-        score += days * 5
+    if symptoms.get("headache"):
+        score += 10
 
-    # Duration factor
-    total_days = 0
-    for s in [data.symptoms.cough, data.symptoms.fever,
-              data.symptoms.headache, data.symptoms.vomiting]:
-        if s:
-            total_days += s.get("days", 0)
-    score += total_days * 2
-
-    # Age factor
-    if data.age < 5:
-        score += 15
-    elif data.age > 60:
+    if symptoms.get("pregnancy"):
         score += 25
 
-    # Pregnancy
-    if data.gender.lower() == "female" and data.symptoms.pregnancy:
-        score += 40
+    description = data.get("description", "").lower()
+    for keyword, value in KEYWORD_SCORES.items():
+        if keyword in description:
+            score += value
 
-    # Genetic disease
-    if data.genetic_disease:
-        disease = data.genetic_disease.lower()
-        if "diabetes" in disease:
-            score += 20
-        elif "heart" in disease:
-            score += 40
-
-    # NLP description scoring
-    desc = data.description.lower()
-    for keyword, val in KEYWORD_SCORES.items():
-        if keyword in desc:
-            score += val
+    if score >= 80:
+        return 1000
 
     return score
 
 # -------------------------
-# Auth
+# RISK LEVEL
 # -------------------------
-@app.post("/signup")
-def signup(data: LoginData):
-    if data.username in users:
-        return {"success": False, "message": "Username exists"}
-    users[data.username] = data.password
-    return {"success": True}
-
-@app.post("/login")
-def login(data: LoginData):
-    if data.username in users and users[data.username] == data.password:
-        return {"success": True}
-    return {"success": False}
+def get_risk_level(score):
+    if score >= 80:
+        return "HIGH"
+    elif score >= 40:
+        return "MEDIUM"
+    else:
+        return "LOW"
 
 # -------------------------
-# Add Walk-in Patient
+# DOCTOR ASSIGNMENT
 # -------------------------
+def assign_doctor(data):
+    description = data.get("description", "").lower()
+    symptoms = data.get("symptoms", {})
+
+    if symptoms.get("pregnancy") or "pregnant" in description:
+        return "Gynecologist"
+    elif "chest" in description or "heart" in description:
+        return "Cardiologist"
+    elif "headache" in description or symptoms.get("headache"):
+        return "Neurologist"
+    else:
+        return "General Physician"
+
+# -------------------------
+# ADD PATIENT (NO AUTH FOR NOW → FAST)
+# -------------------------
+@app.post("/add_patient")
 @app.post("/add-patient")
-def add_patient(data: PatientInput):
-    global token_counter
-
-    token_counter += 1
-    token = f"A{token_counter}"
+def add_patient(data: dict):
+    severity = calculate_severity(data)
+    token = f"A{100 + len(patients) + 1}"
 
     patient = {
+        "id": len(patients) + 1,
         "token": token,
-        "name": data.name,
-        "age": data.age,
-        "gender": data.gender,
-        "symptoms": data.symptoms.dict(),
-        "doctor": assign_doctor(data.symptoms, data.description),
-        "priority": calculate_severity(data),  # ✅ FIXED
+        "name": data.get("name", "Unknown"),
+        "age": data.get("age", 0),
+        "gender": data.get("gender", "Unspecified"),
+        "symptoms": data.get("symptoms", {}),
+        "description": data.get("description", ""),
+        "severity": severity,
+        "base_score": severity,
+        "priority": float(severity),
+        "risk_level": get_risk_level(severity),
+        "doctor": assign_doctor(data),
         "arrival_time": time.time(),
-        "arrived": True
-    }
-
-    patients.append(patient)
-    return {"message": "Patient added", "token": token}
-
-# -------------------------
-# Book Patient
-# -------------------------
-@app.post("/book")
-def book_patient(data: PatientInput):
-    global token_counter
-
-    token_counter += 1
-    token = f"A{token_counter}"
-
-    patient = {
-        "token": token,
-        "name": data.name,
-        "age": data.age,
-        "gender": data.gender,
-        "symptoms": data.symptoms.dict(),
-        "doctor": assign_doctor(data.symptoms),
-        "priority": calculate_severity(data),
-        "arrival_time": None,
+        "status": "waiting",
         "arrived": False
     }
 
     patients.append(patient)
 
     return {
-        "message": "Appointment confirmed",
-        "token": token,
-        "assigned_doctor": patient["doctor"]
+        "message": "Patient added",
+        "patient": patient,
+        "token": token
     }
 
 # -------------------------
-# Mark Arrival
+# BOOK APPOINTMENT
 # -------------------------
-@app.post("/arrive/{token}")
-def mark_arrival(token: str):
-    for p in patients:
-        if p["token"] == token:
-            p["arrived"] = True
-            p["arrival_time"] = time.time()
-            return {
-                "success": True,
-                "token": token,
-                "arrival_time": p["arrival_time"]
-            }
-
-    return {"success": False, "error": "Patient not found"}
+@app.post("/book")
+def book_patient(data: dict):
+    return add_patient(data)
 
 # -------------------------
-# Queue
+# VIEW QUEUE
 # -------------------------
 @app.get("/queue")
 def get_queue():
-    active = [p for p in patients if p["arrived"]]
+    current_time = time.time()
+
+    active = [p for p in patients if p["status"] == "waiting" and p["arrived"]]
 
     active.sort(
-        key=lambda x: -(
-            x["priority"] +
-            ((time.time() - x["arrival_time"]) / 60) * AGING_FACTOR
-        )
+        key=lambda p: p["severity"] + (current_time - p["arrival_time"]) * AGING_FACTOR,
+        reverse=True
     )
 
     for i, p in enumerate(active):
         p["queue_number"] = i + 1
+        p["position"] = i + 1
+        p["priority"] = p["severity"] + (current_time - p["arrival_time"]) * AGING_FACTOR
+        p["estimated_wait"] = i * 5
 
     return active
 
 # -------------------------
-# Doctor Queue
+# ALL PATIENTS
 # -------------------------
-@app.get("/doctor/{doctor_name}")
-def doctor_queue(doctor_name: str):
-    queue = get_queue()
-    doctor_patients = [p for p in queue if p["doctor"] == doctor_name]
-
-    return {
-        "queue": doctor_patients,
-        "total_waiting": len(doctor_patients)
-    }
+@app.get("/all-patients")
+def get_all_patients():
+    return patients
 
 # -------------------------
-# Next Patient
-# -------------------------
-@app.post("/next/{doctor_name}")
-def next_patient(doctor_name: str):
-    queue = get_queue()
-
-    for p in queue:
-        if p["doctor"] == doctor_name:
-            patients[:] = [pt for pt in patients if pt["token"] != p["token"]]
-            return {"message": "Next patient", "patient": p}
-
-    return {"message": "No patients"}
-
-# -------------------------
-# Get Patient
+# PATIENT BY TOKEN
 # -------------------------
 @app.get("/patient/{token}")
 def get_patient(token: str):
     for p in patients:
-        if p["token"] == token:
+        if str(p["token"]) == str(token) or str(p["id"]) == str(token):
             return p
-    return {"error": "Not found"}
+    return {"error": "Patient not found"}
 
 # -------------------------
-# All Patients
+# DOCTOR QUEUE
 # -------------------------
-@app.get("/all-patients")
-def all_patients():
-    return patients
+@app.get("/doctor/{doctor_name}")
+def doctor_queue(doctor_name: str):
+    current_time = time.time()
+
+    active = [
+        p for p in patients
+        if p["status"] == "waiting"
+        and p["arrived"]
+        and p["doctor"].lower() == doctor_name.lower()
+    ]
+
+    active.sort(
+        key=lambda p: p["severity"] + (current_time - p["arrival_time"]) * AGING_FACTOR,
+        reverse=True
+    )
+
+    return {
+        "doctor": doctor_name,
+        "queue": active,
+        "total_waiting": len(active)
+    }
+
+# -------------------------
+# NEXT PATIENT
+# -------------------------
+@app.post("/next/{doctor_name}")
+def next_patient(doctor_name: str):
+    current_time = time.time()
+
+    active = [
+        p for p in patients
+        if p["status"] == "waiting"
+        and p["arrived"]
+        and p["doctor"].lower() == doctor_name.lower()
+    ]
+
+    active.sort(
+        key=lambda p: p["severity"] + (current_time - p["arrival_time"]) * AGING_FACTOR,
+        reverse=True
+    )
+
+    if not active:
+        return {"message": "No patients in queue"}
+
+    next_p = active[0]
+    next_p["status"] = "done"
+
+    return {
+        "message": f"Calling {next_p['name']}",
+        "patient": next_p
+    }
+
+# -------------------------
+# MARK ARRIVED
+# -------------------------
+@app.post("/arrive/{token}")
+def mark_arrived(token: str):
+    for p in patients:
+        if str(p["token"]) == str(token) or str(p["id"]) == str(token):
+            p["arrived"] = True
+            p["arrival_time"] = time.time()
+            return {"message": "Arrival updated", "token": token}
+
+    return {"error": "Patient not found"}
+
+# -------------------------
+# COMPLETE PATIENT
+# -------------------------
+@app.post("/complete/{token}")
+def complete_patient(token: str):
+    for p in patients:
+        if str(p["token"]) == str(token) or str(p["id"]) == str(token):
+            p["status"] = "done"
+            return {"message": "Patient completed"}
+
+    return {"error": "Patient not found"}

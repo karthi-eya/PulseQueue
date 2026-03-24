@@ -168,6 +168,17 @@
         <div id="errorMsg"></div>
 
         <form id="authForm">
+            <!-- Signup-only fields (hidden by default) -->
+            <div class="input-group" id="nameGroup" style="display:none;">
+                <label for="signupName">Full Name</label>
+                <input type="text" id="signupName" placeholder="Enter your full name">
+            </div>
+
+            <div class="input-group" id="ageGroup" style="display:none;">
+                <label for="signupAge">Age</label>
+                <input type="number" id="signupAge" placeholder="Enter your age" min="1" max="120">
+            </div>
+
             <div class="input-group">
                 <label for="username">Username / User ID</label>
                 <input type="text" id="username" required placeholder="Enter username">
@@ -195,17 +206,23 @@
             const subtitle = document.getElementById('formSubtitle');
             const btn = document.getElementById('submitBtn');
             const toggle = document.getElementById('toggleText');
+            const nameGroup = document.getElementById('nameGroup');
+            const ageGroup = document.getElementById('ageGroup');
 
             if (isSignup) {
                 title.textContent = 'Create Patient Account';
                 subtitle.textContent = 'Sign up to book your appointments';
                 btn.textContent = 'Sign Up';
                 toggle.innerHTML = 'Already have an account? <a onclick="toggleMode()">Login</a>';
+                if (nameGroup) nameGroup.style.display = 'block';
+                if (ageGroup) ageGroup.style.display = 'block';
             } else {
                 title.textContent = 'Welcome Back';
                 subtitle.textContent = 'Login to your PulseQueue account';
                 btn.textContent = 'Login';
                 toggle.innerHTML = 'Are you a new patient? <a onclick="toggleMode()">Sign Up</a>';
+                if (nameGroup) nameGroup.style.display = 'none';
+                if (ageGroup) ageGroup.style.display = 'none';
             }
             document.getElementById('errorMsg').textContent = '';
         }
@@ -215,80 +232,68 @@
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
             const errorMsg = document.getElementById('errorMsg');
-
             errorMsg.textContent = 'Processing...';
 
+            // ── SIGNUP ──────────────────────────────────────────────────────
             if (isSignup) {
-                // Patient Signup
+                const name = (document.getElementById('signupName')?.value || user).trim();
+                const age = parseInt(document.getElementById('signupAge')?.value || '25', 10);
                 try {
-                    const res = await fetch('http://localhost:8002/signup', {
+                    const res = await fetch('http://127.0.0.1:8000/auth/signup', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: user, password: pass })
+                        body: JSON.stringify({ name, age, password: pass })
                     });
                     const data = await res.json();
-
-                    // The core_backend returns {"success": true} or {"success": False, "message": "error"}
-                    // The proxy might return {"error": "..."}
-                    if (data.success) {
-                        // Wipe old appointment data from previous tests so the booking form shows up!
-                        localStorage.removeItem('appointmentNumber');
-                        localStorage.removeItem('appointmentDate');
-                        localStorage.removeItem('appointmentTime');
-                        localStorage.removeItem('patientBooked');
-
-                        // Immediately log them into their new account
-                        localStorage.setItem('patientUser', user);
-                        window.location.href = "/patient/index.html";
-                    } else if (data.message) {
-                        errorMsg.textContent = data.message;
-                    } else if (data.error) {
-                        errorMsg.textContent = data.error;
+                    if (res.ok) {
+                        alert(`✅ Account created!\n\nYour User ID: ${data.user_id}\n\nSave this — you'll need it to log in.`);
+                        toggleMode(); // switch back to login
+                        document.getElementById('username').value = data.user_id;
                     } else {
-                        errorMsg.textContent = "Signup failed.";
+                        errorMsg.textContent = data.detail || 'Signup failed.';
                     }
                 } catch (err) {
-                    errorMsg.textContent = 'Server error/CORS error. Please try again.';
+                    errorMsg.textContent = 'Server error. Make sure the backend is running.';
                 }
                 return;
             }
 
-            // Doctor Login Logic (5 profiles, same password)
-            const doctorProfiles = {
-                "general": "General Physician",
-                "cardio": "Cardiologist",
-                "derma": "Dermatologist",
-                "neuro": "Neurologist",
-                "ent": "ENT"
-            };
+            // ── LOGIN (all roles go through backend) ─────────────────────────
+            try {
+                const res = await fetch('http://127.0.0.1:8000/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user, password: pass })
+                });
+                const data = await res.json();
 
-            if (doctorProfiles[user.toLowerCase()] && pass === "doc@123") {
-                sessionStorage.setItem('doctorAuth', 'true');
-                sessionStorage.setItem('doctorSpecialty', doctorProfiles[user.toLowerCase()]);
-                window.location.href = "/doctor/dist/index.html";
-            }
-            else if (user === "8121017003" && pass === "reception@123") {
-                sessionStorage.setItem('receptionistAuth', 'true');
-                window.location.href = "/receptionist/dashboard.html";
-            }
-            else {
-                // Check Patient backend
-                try {
-                    const res = await fetch('http://localhost:8002/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: user, password: pass })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        localStorage.setItem('patientUser', user);
-                        window.location.href = "/patient/index.html";
-                    } else {
-                        errorMsg.textContent = "Invalid credentials";
-                    }
-                } catch (err) {
-                    errorMsg.textContent = 'Server error. Please try again.';
+                if (!res.ok) {
+                    errorMsg.textContent = data.detail || 'Login failed.';
+                    return;
                 }
+
+                // Store JWT and role info
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userRole', data.role);
+                localStorage.setItem('userId', user);
+
+                if (data.role === 'doctor') {
+                    // Also keep session storage so doctor React app recognises the session
+                    sessionStorage.setItem('doctorAuth', 'true');
+                    sessionStorage.setItem('doctorSpecialty', data.specialty || 'General Physician');
+                    localStorage.setItem('doctorSpecialty', data.specialty || 'General Physician');
+                } else if (data.role === 'reception') {
+                    sessionStorage.setItem('receptionistAuth', 'true');
+                } else if (data.role === 'patient') {
+                    // Clear stale booking data for fresh session
+                    localStorage.removeItem('appointmentNumber');
+                    localStorage.setItem('patientName', data.name || user);
+                }
+
+                window.location.href = data.redirect;
+
+            } catch (err) {
+                errorMsg.textContent = 'Cannot reach server. Make sure the backend is running on port 8000.';
             }
         });
     </script>

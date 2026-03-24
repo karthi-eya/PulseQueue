@@ -14,7 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-CORE_BACKEND_URL = "http://localhost:8000"
+CORE_BACKEND_URL = "http://127.0.0.1:8000"
 
 # -------------------------
 # Models

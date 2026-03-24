@@ -1,246 +1,136 @@
+// -------------------------
+// JWT GUARD — redirect to login if no token
+// -------------------------
+(function () {
+    const token = localStorage.getItem('token');
+    const onPatientPage = window.location.pathname.includes('symptoms') ||
+        window.location.pathname.includes('success');
+    if (onPatientPage && !token) {
+        window.location.href = '/';
+    }
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.location.pathname.endsWith('index.html') && localStorage.getItem('appointmentNumber')) {
+
+    // -------------------------
+    // REDIRECT IF ALREADY REGISTERED
+    // -------------------------
+    if (window.location.pathname.endsWith('index.html') && localStorage.getItem('patientToken')) {
         window.location.href = 'success.html';
         return;
     }
 
-    // Add simple input animations for focus states
-    const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="number"], textarea, input[type="date"], select');
-
+    // -------------------------
+    // INPUT ANIMATION
+    // -------------------------
+    const inputs = document.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
         input.addEventListener('focus', (e) => {
             const label = e.target.parentElement.querySelector('label');
-            if (label) label.style.color = 'var(--primary-dark)';
+            if (label) label.style.color = 'blue';
         });
 
         input.addEventListener('blur', (e) => {
             const label = e.target.parentElement.querySelector('label');
-            if (label) label.style.color = 'var(--text-dark)';
+            if (label) label.style.color = 'black';
         });
     });
 
-    // Populate name from local storage if navigating back
+    // -------------------------
+    // LOAD SAVED DATA
+    // -------------------------
     const nameInput = document.getElementById('name');
-    if (nameInput) {
-        const savedName = localStorage.getItem('patientName');
-        if (savedName) nameInput.value = savedName;
-    }
-    const phoneInput = document.getElementById('phone');
-    if (phoneInput) {
-        const savedPhone = localStorage.getItem('patientPhone');
-        if (savedPhone) phoneInput.value = savedPhone;
-    }
     const ageInput = document.getElementById('age');
-    if (ageInput) {
-        const savedAge = localStorage.getItem('patientAge');
-        if (savedAge) ageInput.value = savedAge;
-    }
 
-    // Toggle sub-options for symptoms
-    const parentCheckboxes = document.querySelectorAll('.parent-checkbox');
-    parentCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            const targetId = e.target.getAttribute('data-target');
-            const targetEl = document.getElementById(targetId);
-            if (targetEl) {
-                if (e.target.checked) {
-                    targetEl.classList.add('active');
-                } else {
-                    targetEl.classList.remove('active');
-                    // Uncheck any inner checkboxes and clear numbers
-                    const innerInputs = targetEl.querySelectorAll('input');
-                    innerInputs.forEach(innerInput => {
-                        if (innerInput.type === 'checkbox') innerInput.checked = false;
-                        if (innerInput.type === 'number') innerInput.value = '';
-                    });
-                }
-            }
-        });
-    });
+    if (nameInput) nameInput.value = localStorage.getItem('patientName') || '';
+    if (ageInput) ageInput.value = localStorage.getItem('patientAge') || '';
 
-    // Toggle sub-options for radio buttons
-    const toggleRadios = document.querySelectorAll('.toggle-radio');
-    toggleRadios.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const targetId = e.target.getAttribute('data-target');
-            const targetEl = document.getElementById(targetId);
-            if (targetEl) {
-                if (e.target.value === 'yes') {
-                    targetEl.classList.add('active');
-                } else {
-                    targetEl.classList.remove('active');
-                    const textInput = targetEl.querySelector('input[type="text"]');
-                    if (textInput) textInput.value = '';
-                }
-            }
-        });
-    });
-
+    // -------------------------
+    // LOGIN FORM (BASIC DETAILS)
+    // -------------------------
     const loginForm = document.getElementById('loginForm');
+
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const btn = loginForm.querySelector('.submit-btn');
 
-            btn.innerHTML = `
-                <span>Proceeding...</span>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            `;
-
-            // Save details to localStorage
             const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
             const age = document.getElementById('age').value;
+
             localStorage.setItem('patientName', name);
-            localStorage.setItem('patientPhone', phone);
             localStorage.setItem('patientAge', age);
 
-            // Redirect to symptoms page
-            setTimeout(() => {
-                window.location.href = 'symptoms.html';
-            }, 300);
+            window.location.href = 'symptoms.html';
         });
     }
 
+    // -------------------------
+    // SYMPTOMS FORM (MAIN LOGIC)
+    // -------------------------
     const symptomsForm = document.getElementById('symptomsForm');
+
     if (symptomsForm) {
-        symptomsForm.addEventListener('submit', (e) => {
+        symptomsForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const btn = symptomsForm.querySelector('.submit-btn');
+            if (btn) btn.innerText = "Processing...";
 
-            btn.innerHTML = `
-                <svg class="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: spin 1s linear infinite;">
-                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
-                </svg>
-                <span>Processing...</span>
-            `;
-
-            if (!document.getElementById('spin-style')) {
-                const style = document.createElement('style');
-                style.id = 'spin-style';
-                style.textContent = '@keyframes spin { 100% { transform: rotate(360deg); } }';
-                document.head.appendChild(style);
-            }
-
-            setTimeout(() => {
-                window.location.href = 'appointment.html';
-            }, 600);
-        });
-    }
-
-    const appointmentForm = document.getElementById('appointmentForm');
-    if (appointmentForm) {
-        // Set minimum date and handle past time validations
-        const dateInput = document.getElementById('appointment_date');
-        const timeSelect = document.getElementById('appointment_time');
-        if (dateInput && timeSelect) {
-            const today = new Date().toISOString().split('T')[0];
-            dateInput.setAttribute('min', today);
-
-            // Parse text like "03:00 PM" into minutes
-            const getMinutesFromTimeStr = (timeStr) => {
-                const parts = timeStr.trim().split(' ');
-                if (parts.length < 2) return 0;
-                let [hours, mins] = parts[0].split(':').map(Number);
-                const period = parts[1].toUpperCase();
-
-                if (period === 'PM' && hours !== 12) hours += 12;
-                if (period === 'AM' && hours === 12) hours = 0;
-
-                return hours * 60 + mins;
-            };
-
-            dateInput.addEventListener('change', (e) => {
-                const selectedDate = e.target.value;
-                const isToday = selectedDate === today;
-
-                const now = new Date();
-                const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-                Array.from(timeSelect.options).forEach(opt => {
-                    if (!opt.value || opt.value === "---") return;
-
-                    const startTimeStr = opt.value.split('-')[0].trim();
-                    const slotMinutes = getMinutesFromTimeStr(startTimeStr);
-
-                    // Hide slot if Date is today AND slot time has already passed
-                    if (isToday && currentMinutes >= slotMinutes) {
-                        opt.style.display = 'none';
-                        opt.disabled = true;
-                    } else {
-                        opt.style.display = '';
-                        opt.disabled = false;
-                    }
-                });
-
-                // Clear the selection if the currently selected option became hidden
-                if (timeSelect.options[timeSelect.selectedIndex] && timeSelect.disabled) {
-                    timeSelect.value = "";
-                }
-            });
-        }
-
-        appointmentForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = appointmentForm.querySelector('.submit-btn');
-
-            btn.innerHTML = `
-                <svg class="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: spin 1s linear infinite;">
-                    <circle cx="12" cy="12" r="10" stroke="white" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
-                </svg>
-                <span>Booking...</span>
-            `;
-
-            if (!document.getElementById('spin-style')) {
-                const style = document.createElement('style');
-                style.id = 'spin-style';
-                style.textContent = '@keyframes spin { 100% { transform: rotate(360deg); } }';
-                document.head.appendChild(style);
-            }
-
-            const date = document.getElementById('appointment_date').value;
-            const timeSelect = document.getElementById('appointment_time');
-            const timeText = timeSelect.options[timeSelect.selectedIndex].text;
-
-            localStorage.setItem('appointmentDate', date);
-            localStorage.setItem('appointmentTime', timeText);
-
-            // Construct payload
+            // -------------------------
+            // BUILD PAYLOAD (MATCH BACKEND)
+            // -------------------------
             const payload = {
                 name: localStorage.getItem('patientName') || 'Patient',
-                age: parseInt(localStorage.getItem('patientAge')) || 30,
-                gender: 'Unspecified',
+                age: parseInt(localStorage.getItem('patientAge')) || 25,
+
+                description: document.getElementById("description")?.value || "",
+
                 symptoms: {
-                    fever: null,
-                    cough: null,
-                    headache: null,
-                    vomiting: null,
-                    pregnancy: false
-                },
-                description: "Online booking"
+                    fever: {
+                        temperature: parseFloat(document.getElementById("temp")?.value) || 0,
+                        days: parseInt(document.getElementById("fever_days")?.value) || 0
+                    },
+                    cough: {
+                        days: parseInt(document.getElementById("cough_days")?.value) || 0
+                    },
+                    vomiting: {
+                        days: parseInt(document.getElementById("vomit_days")?.value) || 0
+                    },
+                    headache: document.getElementById("headache")?.checked || false,
+                    pregnancy: document.getElementById("pregnancy")?.checked || false
+                }
             };
 
-            fetch('http://localhost:8002/book', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-                .then(r => r.json())
-                .then(data => {
-                    localStorage.setItem('appointmentNumber', data.token);
-                    // Also set an explicitly booked flag
-                    localStorage.setItem('patientBooked', 'true');
-                    setTimeout(() => {
-                        window.location.href = 'success.html';
-                    }, 800);
-                })
-                .catch(err => {
-                    console.error('Error booking:', err);
-                    alert('Server error while booking.');
-                    btn.innerHTML = '<span>Book Appointment</span>';
+            try {
+                // -------------------------
+                // API CALL (with JWT auth)
+                // -------------------------
+                const token = localStorage.getItem('token');
+                const response = await fetch("http://127.0.0.1:8000/add_patient", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify(payload)
                 });
+
+                const data = await response.json();
+                console.log("Server Response:", data);
+
+                // Save patient ID
+                localStorage.setItem("appointmentNumber", data.patient.id);
+
+                alert("Patient Registered Successfully!");
+
+                // Redirect to success page
+                window.location.href = "success.html";
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Failed to register patient");
+            }
         });
     }
+
 });
