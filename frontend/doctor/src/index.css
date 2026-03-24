@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hospital-blue: #0ea5e9;
+  --color-hospital-teal: #14b8a6;
+  --color-hospital-bg: #f8fafc;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-hospital-bg text-slate-900 font-sans;
+  }
+}
+
+.medical-card {
+  @apply bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md;
+}
+
+.medical-table-header {
+  @apply bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider py-4 px-6 text-left;
+}
+
+.medical-table-cell {
+  @apply py-4 px-6 border-b border-slate-100 text-sm;
+}
